@@ -23,14 +23,10 @@ static int task_count = 0;
 uint64_t get_time_ms(void) {
     struct timespec time;
     clock_gettime(CLOCK_MONOTONIC, &time );
-    printf( "%d\n", (time.tv_nsec/1000));
-    return 0;
+    return (time.tv_nsec/1000);
 }
 
 void task_register(const char *name, uint32_t period_ms, uint32_t max_runs, void (*func)(void)) {
-    // TODO
-    // register a task
-    // !!! Check max tasks
 
     if (task_count == MAX_TASKS)
     {
@@ -40,6 +36,9 @@ void task_register(const char *name, uint32_t period_ms, uint32_t max_runs, void
     {
         task_t newtask = {name, period_ms, max_runs};
         newtask.func = func;
+        newtask.run_count = 0;
+        newtask.last_run_ms = get_time_ms();
+
         tasks[task_count] = newtask;
         task_count++;
         printf("SUCCESS: TASK %s ADDED \n", newtask.name);
@@ -64,12 +63,14 @@ int main(void) {
     while (true) {
         for (int i = 0; i < task_count; i++)
         {
-            for (int j = 0; j < tasks[i].max_runs; j++)
+            if (tasks[i].run_count < tasks[i].max_runs)
             {
-                tasks[i].func;
+                uint64_t current_time = get_time_ms();
+                if(( current_time - tasks[i].last_run_ms) >= tasks[i].period_ms)
+                    tasks[i].func();
+                tasks[i].run_count++;
             }
         }
-        task_count = 0;
     }
 
     return 0;
