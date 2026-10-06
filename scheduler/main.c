@@ -23,7 +23,7 @@ static int task_count = 0;
 uint64_t get_time_ms(void) {
     struct timespec time;
     clock_gettime(CLOCK_MONOTONIC, &time );
-    return (time.tv_nsec/1000);
+    return (time.tv_sec*1000 + time.tv_nsec/1000);
 }
 
 void task_register(const char *name, uint32_t period_ms, uint32_t max_runs, void (*func)(void)) {
@@ -68,6 +68,7 @@ int main(void) {
                 uint64_t current_time = get_time_ms();
                 if(( current_time - tasks[i].last_run_ms) >= tasks[i].period_ms)
                     tasks[i].func();
+                tasks[i].last_run_ms = current_time;
                 tasks[i].run_count++;
             }
         }
